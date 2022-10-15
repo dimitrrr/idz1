@@ -1,6 +1,6 @@
+import re
 import string
 from collections import Counter
-import re
 
 
 def remove_chars_from_text(text, chars):
@@ -15,7 +15,7 @@ class Analyzer:
         spec_chars = string.punctuation + '\n\xa0«»\t—…'
         self.text = remove_chars_from_text(self.text, spec_chars)
 
-    def get_table_data(self):
+    def get_table_stats_data(self):
 
         res = [
             ['Total words', self.get_words_amount()],
@@ -53,30 +53,15 @@ class Analyzer:
         return len(self.raw_text.replace(" ", ""))
 
     def get_words_frequency(self):
-        return self.count_words_fast(self.raw_text)
+        return self.count_words(self.raw_text, 10)
 
     def get_unique_words_amount(self):
-        return len(self.count_words_fast(self.raw_text))
+        return len(self.count_words(self.raw_text, 50))
 
-    def count_words(self, text):
-        skips = [".", ", ", ":", ";", "'", '"']
-        for ch in skips:
-            text = text.replace(ch, "")
-        word_counts = {}
-        for word in text.split(" "):
-            if word in word_counts:
-                word_counts[word] += 1
-            else:
-                word_counts[word] = 1
-        return word_counts
-
-    def count_words_fast(self, text):
-        text = text.lower()
-        skips = [".", ", ", ":", ";", "'", '"', '/', '...']
-        for ch in skips:
-            text = text.replace(ch, "")
-        word_counts = Counter(text.split(" "))
-        return word_counts
+    def count_words(self, s, mc):
+        elements = s.split()
+        elements = [x.strip(' ') for x in elements]
+        return Counter(elements).most_common(mc)
 
     def get_words_stats(self):
         words = self.raw_text.split(' ')

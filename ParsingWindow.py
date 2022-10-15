@@ -1,14 +1,10 @@
-from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import *
 from ParsingFunctions import *
 from Analyzer import *
-from datetime import datetime
-import matplotlib
-matplotlib.use('Qt5Agg')
-
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+import matplotlib
+matplotlib.use('Qt5Agg')
 
 
 class MplCanvas(FigureCanvasQTAgg):
@@ -152,7 +148,7 @@ class ParsingWindow(QWidget):
         back_btn = QPushButton('Back to main')
         back_btn.clicked.connect(self.back_to_main)
         save_btn = QPushButton('Export')
-        save_btn.clicked.connect(self.shoot)
+        save_btn.clicked.connect(self.file_save)
         layout_buttons.addWidget(back_btn)
         layout_buttons.addWidget(save_btn)
         widget_buttons = QWidget()
@@ -182,7 +178,7 @@ class ParsingWindow(QWidget):
         self.layout_main.addWidget(self.widget_result)
 
     def create_table_widget(self):
-        data = self.analyzer.get_table_data()
+        data = self.analyzer.get_table_stats_data()
 
         table = QTableWidget()
 
@@ -197,15 +193,13 @@ class ParsingWindow(QWidget):
 
             table.setSortingEnabled(True)
             table.setHorizontalHeaderLabels(['Property', 'Value'])
-            table.setMaximumWidth(table.horizontalHeader().length())
-            table.setMaximumHeight(300)
+            table.setMaximumWidth(table.horizontalHeader().length() + 50)
+            table.setMaximumHeight(500)
 
         return table
 
     def create_common_words_table_widget(self):
         data = self.analyzer.get_words_frequency()
-        keys = list(data.keys())
-        values = list(data.values())
 
         table = QTableWidget()
 
@@ -214,7 +208,7 @@ class ParsingWindow(QWidget):
             table.setColumnCount(2)
 
             row = 0
-            for key, value in zip(keys, values):
+            for key, value in data:
                 item_key = QTableWidgetItem(str(key))
                 table.setItem(row, 0, item_key)
                 item_value = QTableWidgetItem(str(value))
@@ -223,15 +217,15 @@ class ParsingWindow(QWidget):
 
             table.setSortingEnabled(True)
             table.setHorizontalHeaderLabels(['Word', 'Frequency'])
-            table.setMaximumWidth(table.horizontalHeader().length())
-            table.setMaximumHeight(300)
+            table.setMaximumWidth(table.horizontalHeader().length() + 50)
+            table.setMaximumHeight(500)
 
         return table
 
     def add_plot(self):
         most_common = self.analyzer.get_words_frequency()
-        keys = list(most_common.keys())
-        values = list(most_common.values())
+        keys = [m[0] for m in most_common]
+        values = [m[1] for m in most_common]
         sc = MplCanvas(self, width=5, height=4, dpi=100)
         sc.axes.plot(keys, values)
         self.result_layout.addWidget(sc)
@@ -241,5 +235,9 @@ class ParsingWindow(QWidget):
         self.widget_text.show()
         self.widget_rb.show()
 
-    def shoot(self):
-        pass
+    def file_save(self):
+        filename, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Word Files (*.docx)")
+        stats = self.analyzer.get_table_stats_data()
+        common = self.analyzer.get_words_frequency()
+        save_file(filename, stats, common)
+
